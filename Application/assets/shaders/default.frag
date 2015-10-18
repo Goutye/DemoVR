@@ -1,17 +1,13 @@
 #version 330
 
+in vec3 vNormal;
 in vec2 vUV;
 
-uniform sampler2D uTexture;
+uniform sampler2D uSampler;
 
 out vec4 oColor;
 
 void main()
-{
-	vec2 t = vUV * 6;
-	
-	if ((int(floor(t.x) + floor(t.y)) & 1) == 0)
-		oColor = vec4(1, 1, 1, 1);
- 	else
-		oColor = vec4(0.5, 0.5, 0.5, 1);
+{	
+	oColor = texture(uSampler, vUV.st);
 }
