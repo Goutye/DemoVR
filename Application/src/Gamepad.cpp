@@ -24,8 +24,6 @@ void VRPN_CALLBACK Gamepad::handle_button_states_stub(void* userData, const vrpn
 
 Gamepad::Gamepad(char *name) : _name(name)
 {
-	using namespace std::placeholders;
-
 	analogs = new vrpn_Analog_Remote(_name);
 	analogs->register_change_handler(this, handle_analog_stub);
 

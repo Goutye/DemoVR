@@ -52,14 +52,22 @@ namespace ebony {
 		glSamplerParameteri(*_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glSamplerParameteri(*_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		
-		gamepad = new Gamepad("XInput0@localhost");
+		gamepad = new Gamepad("XInput0@169.254.122.233");
+		tracker = new Tracker("Lunettes@localhost");
 		position = glm::vec3(2.f, -1.f, 1.f);
+	}
+
+	Application::~Application()
+	{
+		delete gamepad;
+		delete tracker;
 	}
 	
 	void Application::update(float dt)
 	{
 		_time += dt;
 		gamepad->update();
+		tracker->update();
 
 		float x, y;
 		gamepad->getAnalogR(x, y);
@@ -73,13 +81,35 @@ namespace ebony {
 		gamepad->getAnalogL(x, y);
 		x *= 0.1, y *= 0.1;
 		position += y * direction + x * glm::cross(direction, glm::vec3(0, 0, 1));
-		position.z = 1.9f;
+		position.z = 1.7f;
+
+		{
+			double x, y, z;
+			tracker->getPos(x, y, z);
+
+			double dist = x + 1;
+			double angle = atan2(1, dist);
+
+			//_pipeline.perspective(static_cast<float>(angle * 180 / PI_D) * 2, 16, 9, 0.0001f, 1000, dist, 0.01f);
+
+			double wx, wy, wz;
+			
+			wy = -x;
+			wz = y;
+			wx = -z;
+
+			rpos = position;
+
+			glm::vec3 right = glm::cross(direction, glm::vec3(0, 0, 1));
+			glm::vec3 forward = glm::cross(glm::vec3(0, 0, 1), right);
+			rpos += static_cast<float>(wy) * forward + static_cast<float>(wx) * right
+				+ static_cast<float>(wz) * glm::vec3(0, 0, 1);
+		}
 	}
 
 	void Application::incr(float step)
 	{
 		_screenD += step;
-		_pipeline.perspective(70, 16, 9, 0.0001f, 1000, _screenD, 0.01f);
 	}
 	
 	void Application::draw(float et)
@@ -88,9 +118,10 @@ namespace ebony {
 													   TransformPipelineStereo::Right};
 		static GLenum masks[2][3] = {{GL_FALSE, GL_TRUE, GL_TRUE},
 									 {GL_TRUE, GL_FALSE, GL_FALSE}};
+		static GLenum buffers[2] = {GL_BACK_LEFT, GL_BACK_RIGHT};
 
-		_pipeline.lookat(position,
-						 position + direction,
+		_pipeline.lookat(rpos,
+						 rpos + direction,
 						 glm::vec3(0, 0, 1));
 		
 		_pipeline.identity();
@@ -99,7 +130,7 @@ namespace ebony {
 		glActiveTexture(GL_TEXTURE0);
 		
 		for (int i = 0; i < 2; ++i) {
-			glColorMask(masks[i][0], masks[i][1], masks[i][2], GL_FALSE);
+			glDrawBuffer(buffers[i]);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
 			glUniformMatrix4fv(_uniformMvp, 1, GL_FALSE, glm::value_ptr(_pipeline.getMvp(eyes[i])));

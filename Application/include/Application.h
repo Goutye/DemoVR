@@ -2,6 +2,7 @@
 #define EBONY_APPLICATION_H_
 
 #include "Gamepad.h"
+#include "Tracker.h"
 #include "graphics/opengl/opengl.h"
 #include "graphics/TransformPipelineStereo.h"
 #include "graphics/StaticModel.h"
@@ -15,6 +16,7 @@ namespace ebony {
 	class Application {
 	public:
 		Application(SDL_Window *window);
+		~Application();
 		
 		void update(float dt);
 		void draw(float extrapolationTime);
@@ -33,7 +35,9 @@ namespace ebony {
 		float _screenD = 1;
 		SDL_Window *window;
 		Gamepad *gamepad;
+		Tracker *tracker;
 		glm::vec3 position;
+		glm::vec3 rpos;
 		glm::vec3 direction;
 		float theta = -1.96725;
 		float phi = -0.8050;
