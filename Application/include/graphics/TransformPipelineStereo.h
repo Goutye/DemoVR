@@ -21,7 +21,8 @@ namespace ebony {
 		
 		TransformPipelineStereo &operator=(const TransformPipelineStereo &tp) = delete;
 
-		void perspective(float fov, int width, int height, float near, float far, float screen, float eyeDistance);
+		void perspective(const glm::mat3 &PCaveInWorld, const glm::vec3 &OCaveInWorld,
+						 const glm::vec3 &OEyeInCave, float near, float far, float eyeDistance);
 
 		void lookat(const glm::vec3 &position, const glm::vec3 &target, const glm::vec3 &up);
 		

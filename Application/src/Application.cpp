@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include <GL/glew.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "utils/io.h"
 
@@ -30,8 +31,6 @@ namespace ebony {
 		glUseProgram(*_program);
 		_uniformMvp = glGetUniformLocation(*_program, "uMvp");
 		_uniformSampler = glGetUniformLocation(*_program, "uSampler");
-		
-		_pipeline.perspective(70, 16, 9, 0.001f, 100, 3.0f, 0.015f);
 
 		for (int i = 0; i < 5; ++i) {
 			shared_ptr<gl::Texture> texture = make_shared<gl::Texture>();
@@ -52,9 +51,14 @@ namespace ebony {
 		glSamplerParameteri(*_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glSamplerParameteri(*_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		
-		gamepad = new Gamepad("XInput0@169.254.122.233");
-		tracker = new Tracker("Lunettes@localhost");
-		position = glm::vec3(2.f, -1.f, 1.f);
+		//gamepad = new Gamepad("XInput0@localhost");
+		//tracker = new Tracker("Lunettes@localhost");
+
+		_PCaveInWorld = glm::mat3(1, 0, 0,
+								  0, 0, 1,
+								  0, -1, 0);
+		_OCaveInWorld = glm::vec3(0, -20.0f, 1.6f);
+		_OEyeInCave = glm::vec3(0, 0.11f, 0.7f);
 	}
 
 	Application::~Application()
@@ -66,10 +70,11 @@ namespace ebony {
 	void Application::update(float dt)
 	{
 		_time += dt;
-		gamepad->update();
-		tracker->update();
 
-		float x, y;
+		//gamepad->update();
+		//tracker->update();
+
+		/*float x, y;
 		gamepad->getAnalogR(x, y);
 		theta += y * dt;
 		phi -= x * dt;
@@ -90,7 +95,7 @@ namespace ebony {
 			double dist = x + 1;
 			double angle = atan2(1, dist);
 
-			//_pipeline.perspective(static_cast<float>(angle * 180 / PI_D) * 2, 16, 9, 0.0001f, 1000, dist, 0.01f);
+			_pipeline.perspective(static_cast<float>(angle * 180 / PI_D) * 2, 16, 9, 0.0001f, 1000, dist, 0.01f);
 
 			double wx, wy, wz;
 			
@@ -104,7 +109,7 @@ namespace ebony {
 			glm::vec3 forward = glm::cross(glm::vec3(0, 0, 1), right);
 			rpos += static_cast<float>(wy) * forward + static_cast<float>(wx) * right
 				+ static_cast<float>(wz) * glm::vec3(0, 0, 1);
-		}
+		}*/
 	}
 
 	void Application::incr(float step)
@@ -119,18 +124,16 @@ namespace ebony {
 		static GLenum masks[2][3] = {{GL_FALSE, GL_TRUE, GL_TRUE},
 									 {GL_TRUE, GL_FALSE, GL_FALSE}};
 		static GLenum buffers[2] = {GL_BACK_LEFT, GL_BACK_RIGHT};
-
-		_pipeline.lookat(rpos,
-						 rpos + direction,
-						 glm::vec3(0, 0, 1));
 		
 		_pipeline.identity();
+		_pipeline.perspective(_PCaveInWorld, _OCaveInWorld, _OEyeInCave, 0.01f, 100.0f, 0.1f);
 		
 		glBindSampler(0, *_sampler);
 		glActiveTexture(GL_TEXTURE0);
 		
 		for (int i = 0; i < 2; ++i) {
-			glDrawBuffer(buffers[i]);
+			//glDrawBuffer(buffers[i]);
+			glColorMask(masks[i][0], masks[i][1], masks[i][2], GL_TRUE);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
 			glUniformMatrix4fv(_uniformMvp, 1, GL_FALSE, glm::value_ptr(_pipeline.getMvp(eyes[i])));

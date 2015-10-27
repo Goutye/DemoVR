@@ -1,5 +1,6 @@
 #include "graphics/TransformPipelineStereo.h"
 
+#include <iostream>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -15,31 +16,59 @@ namespace ebony {
 		_isDirty = true;
 	}
 
-	void TransformPipelineStereo::perspective(float fov, int width, int height, float near, float far, float screen, float eyeDistance)
+	void TransformPipelineStereo::perspective(const glm::mat3 &PCaveInWorld, const glm::vec3 &OCaveInWorld,
+											  const glm::vec3 &OEyeInCave, float near, float far, float eyeDistance)
 	{
+		static const glm::vec2 screenSize(0.4f, 0.22f);
+		static const glm::mat3 PScreenInCaveInv = glm::inverse(glm::mat3(1, 0, 0,
+																		 0, 1, 0,
+																		 0, 0, 1));
+		static const glm::vec3 OScreenInCave(0, 0.11f, 0);
+
 		_eyeDistance = eyeDistance;
+
+		glm::mat4 viewMatrix;
+		glm::vec3 OEyeInScreen;
+
+		OEyeInScreen = glm::vec3(mat4(PScreenInCaveInv) * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::vec4(OEyeInCave, 1.0f));
+
+		viewMatrix = glm::mat4(PScreenInCaveInv)
+			* glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::mat4(glm::inverse(PCaveInWorld))
+			* glm::translate(glm::mat4(1.0f), -OCaveInWorld);
 		
-		float screenX = screen * tan(fov * PI_F / 360);
-		float top = tan(fov * PI_F / 360) * near * height / width;
-		float bottom = -top;
-		float left = -near * (screenX - _eyeDistance / 2) / screen;
-		float right = near * (screenX + _eyeDistance / 2) / screen;
+		{
+			OEyeInScreen.x -= eyeDistance / 2;
+
+			float left = (-screenSize.x / 2 - OEyeInScreen.x) * near / glm::abs(OEyeInScreen.z);
+			float right = (screenSize.x / 2 - OEyeInScreen.x) * near / glm::abs(OEyeInScreen.z);
+			float top = (screenSize.y / 2 - OEyeInScreen.y) * near / glm::abs(OEyeInScreen.z);
+			float bottom = (-screenSize.y / 2 - OEyeInScreen.y) * near / glm::abs(OEyeInScreen.z);
 		
-		_projection[Left] = glm::frustum(left, right, bottom, top, near, far);
-		_projection[Right] = glm::frustum(-right, -left, bottom, top, near, far);
+			_projection[Left] = glm::frustum(left, right, bottom, top, near, far);
+			_view[Left] = glm::translate(glm::mat4(1.0f), -OEyeInScreen) * viewMatrix;
+		}
+
+		{
+			OEyeInScreen.x += eyeDistance;
+
+			float left = (-screenSize.x / 2 - OEyeInScreen.x) * near / glm::abs(OEyeInScreen.z);
+			float right = (screenSize.x / 2 - OEyeInScreen.x) * near / glm::abs(OEyeInScreen.z);
+			float top = (screenSize.y / 2 - OEyeInScreen.y) * near / glm::abs(OEyeInScreen.z);
+			float bottom = (-screenSize.y / 2 - OEyeInScreen.y) * near / glm::abs(OEyeInScreen.z);
+		
+			_projection[Right] = glm::frustum(left, right, bottom, top, near, far);
+			_view[Right] = glm::translate(glm::mat4(1.0f), -OEyeInScreen) * viewMatrix;
+		}
 		
 		_isDirty = true;
 	}
 
 	void TransformPipelineStereo::lookat(const vec3 &position, const vec3 &target, const vec3 &up)
 	{
-		_view[Left] = glm::translate(glm::mat4(1.0f), glm::vec3(-_eyeDistance / 2, 0, 0));
-		_view[Right] = glm::translate(glm::mat4(1.0f), glm::vec3(_eyeDistance / 2, 0, 0));
+		/*_view[Left] = glm::lookAt(position, target, up);
+		_view[Right] = glm::lookAt(position, target, up);
 		
-		_view[Left] *= glm::lookAt(position, target, up);
-		_view[Right] *= glm::lookAt(position, target, up);
-		
-		_isDirty = true;
+		_isDirty = true;*/
 	}
 		
 	TransformPipelineStereo &TransformPipelineStereo::translate(const vec3 &offset)

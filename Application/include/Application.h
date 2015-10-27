@@ -36,11 +36,12 @@ namespace ebony {
 		SDL_Window *window;
 		Gamepad *gamepad;
 		Tracker *tracker;
-		glm::vec3 position;
-		glm::vec3 rpos;
-		glm::vec3 direction;
 		float theta = -1.96725;
 		float phi = -0.8050;
+
+		glm::mat3 _PCaveInWorld;
+		glm::vec3 _OCaveInWorld;
+		glm::vec3 _OEyeInCave;
 	};
 
 }
