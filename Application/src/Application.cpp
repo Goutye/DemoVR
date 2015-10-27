@@ -57,8 +57,8 @@ namespace ebony {
 		_PCaveInWorld = glm::mat3(1, 0, 0,
 								  0, 0, 1,
 								  0, -1, 0);
-		_OCaveInWorld = glm::vec3(0, -20.0f, 1.6f);
-		_OEyeInCave = glm::vec3(0, 0.11f, 0.7f);
+		_OCaveInWorld = glm::vec3(-1.2, -5, 1.6f);
+		_OEyeInCave = glm::vec3(0, 0.11f, 0.8f);
 	}
 
 	Application::~Application()
@@ -112,11 +112,6 @@ namespace ebony {
 		}*/
 	}
 
-	void Application::incr(float step)
-	{
-		_screenD += step;
-	}
-	
 	void Application::draw(float et)
 	{
 		static TransformPipelineStereo::Eye eyes[2] = {TransformPipelineStereo::Left,
@@ -124,6 +119,8 @@ namespace ebony {
 		static GLenum masks[2][3] = {{GL_FALSE, GL_TRUE, GL_TRUE},
 									 {GL_TRUE, GL_FALSE, GL_FALSE}};
 		static GLenum buffers[2] = {GL_BACK_LEFT, GL_BACK_RIGHT};
+
+		_OCaveInWorld.y = (sin(_time) + 1) * -20;
 		
 		_pipeline.identity();
 		_pipeline.perspective(_PCaveInWorld, _OCaveInWorld, _OEyeInCave, 0.01f, 100.0f, 0.1f);

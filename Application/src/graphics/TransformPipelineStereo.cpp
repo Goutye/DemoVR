@@ -20,9 +20,10 @@ namespace ebony {
 											  const glm::vec3 &OEyeInCave, float near, float far, float eyeDistance)
 	{
 		static const glm::vec2 screenSize(0.4f, 0.22f);
-		static const glm::mat3 PScreenInCaveInv = glm::inverse(glm::mat3(1, 0, 0,
+		static const glm::mat4 PScreenInCaveInv = glm::inverse(glm::mat4(glm::mat3(
+																		 1, 0, 0,
 																		 0, 1, 0,
-																		 0, 0, 1));
+																		 0, 0, 1)));
 		static const glm::vec3 OScreenInCave(0, 0.11f, 0);
 
 		_eyeDistance = eyeDistance;
@@ -30,31 +31,28 @@ namespace ebony {
 		glm::mat4 viewMatrix;
 		glm::vec3 OEyeInScreen;
 
-		OEyeInScreen = glm::vec3(mat4(PScreenInCaveInv) * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::vec4(OEyeInCave, 1.0f));
-
-		viewMatrix = glm::mat4(PScreenInCaveInv)
-			* glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::mat4(glm::inverse(PCaveInWorld))
-			* glm::translate(glm::mat4(1.0f), -OCaveInWorld);
+		viewMatrix = PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave)
+			* glm::inverse(glm::mat4(PCaveInWorld)) * glm::translate(glm::mat4(1.0f), -OCaveInWorld);
 		
 		{
-			OEyeInScreen.x -= eyeDistance / 2;
+			OEyeInScreen = glm::vec3(PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::vec4(OEyeInCave + glm::vec3(-eyeDistance / 2, 0, 0), 1.0f));
 
-			float left = (-screenSize.x / 2 - OEyeInScreen.x) * near / glm::abs(OEyeInScreen.z);
-			float right = (screenSize.x / 2 - OEyeInScreen.x) * near / glm::abs(OEyeInScreen.z);
-			float top = (screenSize.y / 2 - OEyeInScreen.y) * near / glm::abs(OEyeInScreen.z);
-			float bottom = (-screenSize.y / 2 - OEyeInScreen.y) * near / glm::abs(OEyeInScreen.z);
+			float left = (-screenSize.x / 2 - OEyeInScreen.x) * near / OEyeInScreen.z;
+			float right = (screenSize.x / 2 - OEyeInScreen.x) * near / OEyeInScreen.z;
+			float top = (screenSize.y / 2 - OEyeInScreen.y) * near / OEyeInScreen.z;
+			float bottom = (-screenSize.y / 2 - OEyeInScreen.y) * near / OEyeInScreen.z;
 		
 			_projection[Left] = glm::frustum(left, right, bottom, top, near, far);
 			_view[Left] = glm::translate(glm::mat4(1.0f), -OEyeInScreen) * viewMatrix;
 		}
 
 		{
-			OEyeInScreen.x += eyeDistance;
+			OEyeInScreen = glm::vec3(PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::vec4(OEyeInCave + glm::vec3(eyeDistance / 2, 0, 0), 1.0f));
 
-			float left = (-screenSize.x / 2 - OEyeInScreen.x) * near / glm::abs(OEyeInScreen.z);
-			float right = (screenSize.x / 2 - OEyeInScreen.x) * near / glm::abs(OEyeInScreen.z);
-			float top = (screenSize.y / 2 - OEyeInScreen.y) * near / glm::abs(OEyeInScreen.z);
-			float bottom = (-screenSize.y / 2 - OEyeInScreen.y) * near / glm::abs(OEyeInScreen.z);
+			float left = (-screenSize.x / 2 - OEyeInScreen.x) * near / OEyeInScreen.z;
+			float right = (screenSize.x / 2 - OEyeInScreen.x) * near / OEyeInScreen.z;
+			float top = (screenSize.y / 2 - OEyeInScreen.y) * near / OEyeInScreen.z;
+			float bottom = (-screenSize.y / 2 - OEyeInScreen.y) * near / OEyeInScreen.z;
 		
 			_projection[Right] = glm::frustum(left, right, bottom, top, near, far);
 			_view[Right] = glm::translate(glm::mat4(1.0f), -OEyeInScreen) * viewMatrix;

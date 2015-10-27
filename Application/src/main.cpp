@@ -75,10 +75,6 @@ int run(int argc, char *argv[])
 			} else if (event.type == SDL_KEYDOWN) {
 				if (event.key.keysym.sym == SDLK_ESCAPE) {
 					running = false;
-				} else if (event.key.keysym.sym == SDLK_w) {
-					app.incr(-0.05);
-				} else if (event.key.keysym.sym == SDLK_x) {
-					app.incr(0.05);
 				}
 			} 
 		}

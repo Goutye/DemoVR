@@ -8,7 +8,7 @@
 #include "graphics/StaticModel.h"
 #include <SDL2/SDL.h>
 
-#include "utils\maths.h"
+#include "utils/maths.h"
 #include <memory>
 
 namespace ebony {
@@ -20,7 +20,6 @@ namespace ebony {
 		
 		void update(float dt);
 		void draw(float extrapolationTime);
-		void incr(float step);
 			
 	private:
 		std::vector<StaticModel> _models;
@@ -32,12 +31,9 @@ namespace ebony {
 		GLuint _uniformMvp;
 		GLuint _uniformSampler;
 
-		float _screenD = 1;
 		SDL_Window *window;
 		Gamepad *gamepad;
 		Tracker *tracker;
-		float theta = -1.96725;
-		float phi = -0.8050;
 
 		glm::mat3 _PCaveInWorld;
 		glm::vec3 _OCaveInWorld;
