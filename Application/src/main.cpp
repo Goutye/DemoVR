@@ -32,7 +32,7 @@ int run(int argc, char *argv[])
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	//SDL_GL_SetAttribute(SDL_GL_STEREO, 1);
 
-	SDL_Window *window = SDL_CreateWindow("Ebony", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL);
+	SDL_Window *window = SDL_CreateWindow("Ebony", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
 	SDL_GLContext glContext = SDL_GL_CreateContext(window);
 
 	glewExperimental = GL_TRUE;

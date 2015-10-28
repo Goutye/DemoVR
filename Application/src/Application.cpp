@@ -54,11 +54,11 @@ namespace ebony {
 		//gamepad = new Gamepad("XInput0@localhost");
 		//tracker = new Tracker("Lunettes@localhost");
 
-		_PCaveInWorld = glm::mat3(1, 0, 0,
+		_PCaveInWorld = glm::mat3(0, -1, 0,
 								  0, 0, 1,
-								  0, -1, 0);
-		_OCaveInWorld = glm::vec3(-1.2, -5, 1.6f);
-		_OEyeInCave = glm::vec3(0, 0.11f, 0.8f);
+								  -1, 0, 0);
+		_OCaveInWorld = glm::vec3(-1, 0.3, 1.8f);
+		_OEyeInCave = glm::vec3(0, 0.11f, 0.6);
 	}
 
 	Application::~Application()
@@ -116,11 +116,11 @@ namespace ebony {
 	{
 		static TransformPipelineStereo::Eye eyes[2] = {TransformPipelineStereo::Left,
 													   TransformPipelineStereo::Right};
-		static GLenum masks[2][3] = {{GL_FALSE, GL_TRUE, GL_TRUE},
-									 {GL_TRUE, GL_FALSE, GL_FALSE}};
+		static GLenum masks[2][3] = {{GL_TRUE, GL_FALSE, GL_FALSE},
+									 {GL_FALSE, GL_TRUE, GL_TRUE}};
 		static GLenum buffers[2] = {GL_BACK_LEFT, GL_BACK_RIGHT};
 
-		_OCaveInWorld.y = (sin(_time) + 1) * -20;
+		_OCaveInWorld.x = (sin(_time) + 1) * -20;
 		
 		_pipeline.identity();
 		_pipeline.perspective(_PCaveInWorld, _OCaveInWorld, _OEyeInCave, 0.01f, 100.0f, 0.1f);

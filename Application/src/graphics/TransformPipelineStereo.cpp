@@ -42,8 +42,8 @@ namespace ebony {
 			float top = (screenSize.y / 2 - OEyeInScreen.y) * near / OEyeInScreen.z;
 			float bottom = (-screenSize.y / 2 - OEyeInScreen.y) * near / OEyeInScreen.z;
 		
-			_projection[Left] = glm::frustum(left, right, bottom, top, near, far);
-			_view[Left] = glm::translate(glm::mat4(1.0f), -OEyeInScreen) * viewMatrix;
+			_projection[Left] = glm::frustum(left, right, bottom, top, near, far) * glm::translate(glm::mat4(1.0f), -OEyeInScreen);
+			_view[Left] = viewMatrix;
 		}
 
 		{
@@ -54,8 +54,8 @@ namespace ebony {
 			float top = (screenSize.y / 2 - OEyeInScreen.y) * near / OEyeInScreen.z;
 			float bottom = (-screenSize.y / 2 - OEyeInScreen.y) * near / OEyeInScreen.z;
 		
-			_projection[Right] = glm::frustum(left, right, bottom, top, near, far);
-			_view[Right] = glm::translate(glm::mat4(1.0f), -OEyeInScreen) * viewMatrix;
+			_projection[Right] = glm::frustum(left, right, bottom, top, near, far) * glm::translate(glm::mat4(1.0f), -OEyeInScreen) ;
+			_view[Right] = viewMatrix;
 		}
 		
 		_isDirty = true;
