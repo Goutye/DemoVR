@@ -16,26 +16,24 @@ namespace ebony {
 		_isDirty = true;
 	}
 
-	void TransformPipelineStereo::perspective(const glm::mat3 &PCaveInWorld, const glm::vec3 &OCaveInWorld,
-											  const glm::vec3 &OEyeInCave, float near, float far, float eyeDistance)
+	void TransformPipelineStereo::perspective(const glm::mat3 &PCameraInWorld, const glm::mat3 &PCaveInWorld, const glm::vec3 &OCameraInWorld,
+											  const glm::vec3 &OEyeInCave, float near, float far, float eyeDistance, const Screen &screen)
 	{
-		static const glm::vec2 screenSize(0.4f, 0.22f);
-		static const glm::mat4 PScreenInCaveInv = glm::inverse(glm::mat4(glm::mat3(
-																		 1, 0, 0,
-																		 0, 1, 0,
-																		 0, 0, 1)));
-		static const glm::vec3 OScreenInCave(0, 0.11f, 0);
+		const glm::vec2 screenSize(screen.width, screen.height);
+		const glm::mat4 PScreenInCaveInv = screen.p_screen_cave;
+		const glm::vec3 OScreenInCave = screen.o_screen_cave;
 
 		_eyeDistance = eyeDistance;
 
 		glm::mat4 viewMatrix;
 		glm::vec3 OEyeInScreen;
 
-		viewMatrix = PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave)
-			* glm::inverse(glm::mat4(PCaveInWorld)) * glm::translate(glm::mat4(1.0f), -OCaveInWorld);
+		viewMatrix = PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::translate(glm::mat4(1.0f), OEyeInCave)
+			* glm::inverse(glm::mat4(PCaveInWorld)) * glm::inverse(glm::mat4(PCameraInWorld)) * glm::translate(glm::mat4(1.0f), -OCameraInWorld);
 		
 		{
-			OEyeInScreen = glm::vec3(PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::vec4(OEyeInCave + glm::vec3(-eyeDistance / 2, 0, 0), 1.0f));
+			vec4 o = PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::vec4(OEyeInCave + glm::vec3(-eyeDistance / 2, 0, 0), 1.0f);
+            OEyeInScreen = vec3(o) / o.w;
 
 			float left = (-screenSize.x / 2 - OEyeInScreen.x) * near / OEyeInScreen.z;
 			float right = (screenSize.x / 2 - OEyeInScreen.x) * near / OEyeInScreen.z;
@@ -47,7 +45,8 @@ namespace ebony {
 		}
 
 		{
-			OEyeInScreen = glm::vec3(PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::vec4(OEyeInCave + glm::vec3(eyeDistance / 2, 0, 0), 1.0f));
+			vec4 o = PScreenInCaveInv * glm::translate(glm::mat4(1.0f), -OScreenInCave) * glm::vec4(OEyeInCave + glm::vec3(eyeDistance / 2, 0, 0), 1.0f);
+            OEyeInScreen = vec3(o) / o.w;
 
 			float left = (-screenSize.x / 2 - OEyeInScreen.x) * near / OEyeInScreen.z;
 			float right = (screenSize.x / 2 - OEyeInScreen.x) * near / OEyeInScreen.z;

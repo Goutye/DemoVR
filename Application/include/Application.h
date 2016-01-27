@@ -35,8 +35,9 @@ namespace ebony {
 		Gamepad *gamepad;
 		Tracker *tracker;
 
+		glm::mat3 _PCameraInWorld;
 		glm::mat3 _PCaveInWorld;
-		glm::vec3 _OCaveInWorld;
+		glm::vec3 _OCameraInWorld;
 		glm::vec3 _OEyeInCave;
 	};
 

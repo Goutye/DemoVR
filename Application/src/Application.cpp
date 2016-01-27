@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,8 +12,11 @@
 
 using namespace std;
 using namespace ebony;
+using namespace glm;
 
 namespace ebony {
+
+    vector<Screen> screens;
 
 	Application::Application(SDL_Window *window) : window(window)
 	{
@@ -51,14 +55,47 @@ namespace ebony {
 		glSamplerParameteri(*_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glSamplerParameteri(*_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		
-		//gamepad = new Gamepad("XInput0@localhost");
+		gamepad = new Gamepad("XInput0@localhost");
 		//tracker = new Tracker("Lunettes@localhost");
 
-		_PCaveInWorld = glm::mat3(0, -1, 0,
+		_PCaveInWorld = glm::mat3(1, 0, 0,
 								  0, 0, 1,
-								  -1, 0, 0);
-		_OCaveInWorld = glm::vec3(-1, 0.3, 1.8f);
-		_OEyeInCave = glm::vec3(0, 0.11f, 0.6);
+								  0, -1, 0);
+		_OCameraInWorld = glm::vec3(2, 0, 1.5f);
+		_OEyeInCave = glm::vec3(0, 0, 1.0f);
+
+        Screen screen1 = {2, 2.2, 
+            glm::inverse(glm::transpose(mat4(
+                 vec4(1, 0, 0, 0),
+                 vec4(0, 1, 0, 0),
+                 vec4(0, 0, 1, 0),
+                 vec4(0, 0, 0, 1)))),
+            vec3(0, 0, 0),
+            640, 720, 640, 0
+        };
+
+        /*Screen screen2 = {0.2, 0.22, 
+            glm::inverse(glm::transpose(mat4(
+                 glm::normalize(vec4(1, 0, -1, 0)),
+                 glm::normalize(vec4(0, 1, 0, 0)),
+                 glm::normalize(vec4(1, 0, 1, 0)),
+                 glm::normalize(vec4(0, 0, 0, 1))))),
+            vec3(-0.17, 0.11, 0.07),
+            640, 720, 0, 0
+        };*/
+
+		Screen screen2 = {2, 2.2, 
+            glm::inverse(glm::transpose(mat4(
+                 glm::normalize(vec4(0, 0, 1, 0)),
+                 glm::normalize(vec4(0, 1, 0, 0)),
+                 glm::normalize(vec4(-1, 0, 0, 0)),
+                 glm::normalize(vec4(0, 0, 0, 1))))),
+            vec3(-1, 0, 1),
+            640, 720, 0, 0
+        };
+
+        screens.push_back(screen1);
+        screens.push_back(screen2);
 	}
 
 	Application::~Application()
@@ -71,7 +108,18 @@ namespace ebony {
 	{
 		_time += dt;
 
-		//gamepad->update();
+		gamepad->update();
+
+		float x, y;
+
+		gamepad->getAnalogR(x, y);
+		_PCameraInWorld = glm::mat3(glm::rotate(glm::mat4(_PCameraInWorld), -x * dt, glm::vec3(0, 0, 1)));
+
+		glm::vec3 move;
+
+		gamepad->getAnalogL(move.x, move.y);
+		_OCameraInWorld += _PCameraInWorld * move * dt;
+
 		//tracker->update();
 
 		/*float x, y;
@@ -120,26 +168,39 @@ namespace ebony {
 									 {GL_FALSE, GL_TRUE, GL_TRUE}};
 		static GLenum buffers[2] = {GL_BACK_LEFT, GL_BACK_RIGHT};
 
-		_OCaveInWorld.x = (sin(_time) + 1) * -20;
-		
-		_pipeline.identity();
-		_pipeline.perspective(_PCaveInWorld, _OCaveInWorld, _OEyeInCave, 0.01f, 100.0f, 0.1f);
-		
-		glBindSampler(0, *_sampler);
+		//_OCaveInWorld.x = (sin(_time) + 1) * -2;
+        //_PCaveInWorld = mat3(glm::rotate(mat4(_PCaveInWorld), 0.1f, vec3(0, 1, 0)));
+
+        glBindSampler(0, *_sampler);
 		glActiveTexture(GL_TEXTURE0);
+
+		int a = 0;
+
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+        for (const Screen &screen : screens) {
+			if (a > 0) break;
+			//a++;
+
+		    _pipeline.identity();
+		    _pipeline.perspective(_PCameraInWorld, _PCaveInWorld, _OCameraInWorld, _OEyeInCave, 0.01f, 100.0f, 0.06f, screen);
+
+			glViewport(screen.vx, screen.vy, screen.vwidth, screen.vheight);
 		
-		for (int i = 0; i < 2; ++i) {
-			//glDrawBuffer(buffers[i]);
-			glColorMask(masks[i][0], masks[i][1], masks[i][2], GL_TRUE);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		    for (int i = 0; i < 2; ++i) {
+			    //glDrawBuffer(buffers[i]);
+			    glColorMask(masks[i][0], masks[i][1], masks[i][2], GL_TRUE);
+			    glClear(GL_DEPTH_BUFFER_BIT);
 			
-			glUniformMatrix4fv(_uniformMvp, 1, GL_FALSE, glm::value_ptr(_pipeline.getMvp(eyes[i])));
+			    glUniformMatrix4fv(_uniformMvp, 1, GL_FALSE, glm::value_ptr(_pipeline.getMvp(eyes[i])));
 			
-			for (int i = 0; i < 5; ++i) {
-				glBindTexture(GL_TEXTURE_2D, *_textures[i]);
-				_models[i].draw();
-			}
-		}
+			    for (int i = 0; i < 5; ++i) {
+				    glBindTexture(GL_TEXTURE_2D, *_textures[i]);
+				    _models[i].draw();
+			    }
+		    }
+        }
 	}
 
 }
